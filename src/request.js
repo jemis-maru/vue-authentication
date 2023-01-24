@@ -27,7 +27,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use((response) => {
     return response
 }, function (error) {
-    console.log(error);
     const originalRequest = error.config;
 
     if (error?.response?.status === 401 && originalRequest.url === 
@@ -36,9 +35,9 @@ axiosInstance.interceptors.response.use((response) => {
         return Promise.reject(error);
     }
 
-    if(error.response.status === 401 && !localStorage.getItem('refresh_token')) {
-            router.push('/login');
-            return Promise.reject(error);
+    if(!localStorage.getItem('refresh_token')) {
+        router.push('/login');
+        return Promise.reject(error);
     }
 
     if (error.response.status === 401 && !originalRequest._retry) {
@@ -51,12 +50,10 @@ axiosInstance.interceptors.response.use((response) => {
                     "refresh_token": refreshToken
             })
             .then(res => {
-                if (res.status === 200) {
-                        localStorage.setItem("token", res.data.idToken);
-                        localStorage.setItem("refresh_token", res.data.refreshToken);
-                        axiosInstance.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('token');
-                        return axiosInstance(originalRequest);
-                }
+                localStorage.setItem("token", res.data.id_token);
+                localStorage.setItem("refresh_token", res.data.refresh_token);
+                axiosInstance.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('token');
+                return axiosInstance(originalRequest);
             })
     }
     return Promise.reject(error);
